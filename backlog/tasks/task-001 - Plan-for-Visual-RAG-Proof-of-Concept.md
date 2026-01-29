@@ -4,6 +4,7 @@ title: Plan for Visual RAG Proof of Concept
 status: In Progress
 assignee: []
 created_date: '2026-01-29 09:48'
+updated_date: '2026-01-29 10:17'
 labels: []
 dependencies: []
 priority: high
@@ -63,8 +64,7 @@ Deliverables
 3. generation.py (Optional): Connects the retrieved image to a VLM (like Qwen2-VL locally) to answer the user's question.
 
 **Tasks**
-- Breakdown the acceptance criteria and epic into tasks. 
-
+- Breakdown the acceptance criteria and epic into tasks.
 ## Description
 
 ## Acceptance Criteria
@@ -74,5 +74,5 @@ Deliverables
 - [ ] #3 Save vectors in milvus with correct schema
 - [ ] #4 Retrieval is tested and works
 - [ ] #5 A visual Qwen model is locally deployed
-- [ ] #6 Breakdown acceptance criteria into tasks
+- [x] #6 Breakdown acceptance criteria into tasks
 <!-- AC:END -->

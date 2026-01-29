@@ -1,1 +1,7 @@
+# Backlogmd
 **/*.DS_Store
+# Python
+.venv/
+**/*.pyc
+# Credentials
+.env
