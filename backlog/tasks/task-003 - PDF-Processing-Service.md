@@ -1,11 +1,15 @@
 ---
 id: task-003
 title: PDF Processing Service
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-29'
-labels: [phase-2, ingestion]
-dependencies: [task-002]
+updated_date: '2026-01-29 10:54'
+labels:
+  - phase-2
+  - ingestion
+dependencies:
+  - task-002
 priority: high
 ---
 
@@ -37,9 +41,9 @@ Implement the PDF to image conversion service that converts each PDF page into a
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 PDF processor converts multi-page PDFs to images
-- [ ] #2 Page numbers are correctly 1-indexed
-- [ ] #3 doc_id generation is deterministic (same file = same ID)
-- [ ] #4 Test with ColPali paper PDF produces 26 images (assuming 26 pages)
-- [ ] #5 Images are RGB format suitable for ColQwen2
+- [x] #1 PDF processor converts multi-page PDFs to images
+- [x] #2 Page numbers are correctly 1-indexed
+- [x] #3 doc_id generation is deterministic (same file = same ID)
+- [x] #4 Test with ColPali paper PDF produces 26 images (assuming 26 pages)
+- [x] #5 Images are RGB format suitable for ColQwen2
 <!-- AC:END -->

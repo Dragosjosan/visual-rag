@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     pdf_dpi: int = Field(default=150)
     pdf_max_pages: int = Field(default=100)
+    documents_dir: str = Field(default="data")
 
     top_k: int = Field(default=5)
     similarity_threshold: float = Field(default=0.7)
