@@ -1,121 +1,109 @@
-from typing import List, Optional
+from typing import Any
 
 import torch
 from loguru import logger
-from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections, utility
+from pymilvus import DataType, MilvusClient
 
 from app.core.config import settings
 
 
 class MilvusService:
     EMBEDDING_DIM = 128
-    PATCHES_PER_PAGE = 1024
+    MAX_PATCHES_PER_PAGE = 1030
 
     def __init__(self) -> None:
-        self._collection: Optional[Collection] = None
-        self._connected = False
+        self._client: MilvusClient | None = None
 
-    def connect(self) -> None:
-        if self._connected:
+    def _get_client(self) -> MilvusClient:
+        if self._client is None:
+            uri = f"http://{settings.milvus_host}:{settings.milvus_port}"
+            self._client = MilvusClient(uri=uri)
+            logger.info(f"Connected to Milvus at {uri}")
+        return self._client
+
+    def _ensure_collection(self) -> None:
+        client = self._get_client()
+        collection_name = settings.milvus_collection_name
+
+        if client.has_collection(collection_name):
+            logger.info(f"Collection {collection_name} already exists")
             return
 
-        try:
-            connections.connect(
-                alias="default",
-                host=settings.milvus_host,
-                port=settings.milvus_port,
-            )
-            self._connected = True
-            logger.info(f"Connected to Milvus at {settings.milvus_host}:{settings.milvus_port}")
-        except Exception as e:
-            logger.error(f"Failed to connect to Milvus: {e}")
-            raise
+        self._create_collection()
 
-    def disconnect(self) -> None:
-        if not self._connected:
-            return
+    def _create_collection(self) -> None:
+        client = self._get_client()
+        collection_name = settings.milvus_collection_name
 
-        connections.disconnect(alias="default")
-        self._connected = False
-        self._collection = None
-        logger.info("Disconnected from Milvus")
+        schema = client.create_schema(auto_id=True, enable_dynamic_fields=False)
 
-    def _ensure_collection(self) -> Collection:
-        if self._collection is not None:
-            return self._collection
+        schema.add_field(
+            field_name="page_id",
+            datatype=DataType.INT64,
+            is_primary=True,
+        )
+        schema.add_field(
+            field_name="doc_id",
+            datatype=DataType.VARCHAR,
+            max_length=64,
+        )
+        schema.add_field(
+            field_name="page_number",
+            datatype=DataType.INT32,
+        )
 
-        self.connect()
+        struct_schema = client.create_struct_field_schema()
+        struct_schema.add_field(
+            field_name="embedding",
+            datatype=DataType.FLOAT_VECTOR,
+            dim=self.EMBEDDING_DIM,
+        )
 
-        if utility.has_collection(settings.milvus_collection_name):
-            self._collection = Collection(settings.milvus_collection_name)
-            self._collection.load()
-            logger.info(f"Loaded existing collection: {settings.milvus_collection_name}")
-            return self._collection
+        schema.add_field(
+            field_name="patches",
+            datatype=DataType.ARRAY,
+            element_type=DataType.STRUCT,
+            struct_schema=struct_schema,
+            max_capacity=self.MAX_PATCHES_PER_PAGE,
+        )
 
-        return self._create_collection()
-
-    def _create_collection(self) -> Collection:
-        fields = [
-            FieldSchema(
-                name="patch_id",
-                dtype=DataType.INT64,
-                is_primary=True,
-                auto_id=True,
-            ),
-            FieldSchema(
-                name="doc_id",
-                dtype=DataType.VARCHAR,
-                max_length=64,
-            ),
-            FieldSchema(
-                name="page_number",
-                dtype=DataType.INT32,
-            ),
-            FieldSchema(
-                name="patch_index",
-                dtype=DataType.INT32,
-            ),
-            FieldSchema(
-                name="embedding",
-                dtype=DataType.FLOAT_VECTOR,
-                dim=self.EMBEDDING_DIM,
-            ),
-        ]
-
-        schema = CollectionSchema(fields=fields, enable_dynamic_field=False)
-        self._collection = Collection(name=settings.milvus_collection_name, schema=schema)
-        logger.info(f"Created collection: {settings.milvus_collection_name}")
+        client.create_collection(collection_name=collection_name, schema=schema)
+        logger.info(f"Created collection: {collection_name}")
 
         self._create_indexes()
-        self._collection.load()
-
-        return self._collection
 
     def _create_indexes(self) -> None:
-        if self._collection is None:
-            raise RuntimeError("Collection not initialized")
+        client = self._get_client()
+        collection_name = settings.milvus_collection_name
 
-        hnsw_params = {
-            "metric_type": "IP",
-            "index_type": "HNSW",
-            "params": {"M": 16, "efConstruction": 256},
-        }
-        self._collection.create_index(field_name="embedding", index_params=hnsw_params)
-        logger.info("Created HNSW index on embedding field")
+        index_params = client.prepare_index_params()
 
-        trie_params = {
-            "index_type": "Trie",
-        }
-        self._collection.create_index(field_name="doc_id", index_params=trie_params)
-        logger.info("Created Trie index on doc_id field")
+        index_params.add_index(
+            field_name="patches[embedding]",
+            index_type="HNSW",
+            metric_type="MAX_SIM_IP",
+            params={"M": 16, "efConstruction": 256},
+        )
+
+        index_params.add_index(
+            field_name="doc_id",
+            index_type="Trie",
+        )
+
+        client.create_index(collection_name=collection_name, index_params=index_params)
+        logger.info("Created HNSW index with MAX_SIM_IP on patches[embedding]")
+
+        client.load_collection(collection_name=collection_name)
+        logger.info(f"Loaded collection: {collection_name}")
 
     def insert_page_embeddings(
         self,
         doc_id: str,
         page_number: int,
         embeddings: torch.Tensor,
-    ) -> List[int]:
-        collection = self._ensure_collection()
+    ) -> int:
+        self._ensure_collection()
+        client = self._get_client()
 
         if embeddings.dim() != 2:
             raise ValueError(f"Expected 2D tensor, got {embeddings.dim()}D")
@@ -126,36 +114,49 @@ class MilvusService:
         if embedding_dim != self.EMBEDDING_DIM:
             raise ValueError(f"Expected embedding dim {self.EMBEDDING_DIM}, got {embedding_dim}")
 
+        if num_patches > self.MAX_PATCHES_PER_PAGE:
+            logger.warning(f"Truncating patches from {num_patches} to {self.MAX_PATCHES_PER_PAGE}")
+            embeddings = embeddings[: self.MAX_PATCHES_PER_PAGE]
+            num_patches = self.MAX_PATCHES_PER_PAGE
+
         embeddings_list = embeddings.cpu().float().numpy().tolist()
+        patches = [{"embedding": emb} for emb in embeddings_list]
 
         data = [
-            [doc_id] * num_patches,
-            [page_number] * num_patches,
-            list(range(num_patches)),
-            embeddings_list,
+            {
+                "doc_id": doc_id,
+                "page_number": page_number,
+                "patches": patches,
+            }
         ]
 
-        result = collection.insert(data)
-        collection.flush()
+        result = client.insert(collection_name=settings.milvus_collection_name, data=data)
+        logger.info(f"Inserted page with {num_patches} patches for doc={doc_id}, page={page_number}")
 
-        logger.info(f"Inserted {num_patches} patches for doc={doc_id}, page={page_number}")
-        return result.primary_keys
+        return result["insert_count"]
 
-    def search_patches(
+    def search_pages(
         self,
-        query_embedding: torch.Tensor,
+        query_embeddings: torch.Tensor,
         top_k: int = 10,
-        doc_id_filter: Optional[str] = None,
-    ) -> List[dict]:
-        collection = self._ensure_collection()
+        doc_id_filter: str | None = None,
+    ) -> list[dict[str, Any]]:
+        self._ensure_collection()
+        client = self._get_client()
 
-        if query_embedding.dim() == 1:
-            query_embedding = query_embedding.unsqueeze(0)
+        if query_embeddings.dim() == 1:
+            query_embeddings = query_embeddings.unsqueeze(0)
 
-        query_vectors = query_embedding.cpu().float().numpy().tolist()
+        query_list = query_embeddings.cpu().float().numpy().tolist()
+
+        from pymilvus.client.embedding_list import EmbeddingList
+
+        embedding_list = EmbeddingList()
+        for emb in query_list:
+            embedding_list.add(emb)
 
         search_params = {
-            "metric_type": "IP",
+            "metric_type": "MAX_SIM_IP",
             "params": {"ef": 64},
         }
 
@@ -163,56 +164,63 @@ class MilvusService:
         if doc_id_filter:
             expr = f'doc_id == "{doc_id_filter}"'
 
-        results = collection.search(
-            data=query_vectors,
-            anns_field="embedding",
-            param=search_params,
+        results = client.search(
+            collection_name=settings.milvus_collection_name,
+            data=[embedding_list],
+            anns_field="patches[embedding]",
+            search_params=search_params,
             limit=top_k,
-            expr=expr,
-            output_fields=["doc_id", "page_number", "patch_index"],
+            filter=expr,
+            output_fields=["doc_id", "page_number"],
         )
 
         matches = []
         for hits in results:
             for hit in hits:
                 matches.append({
-                    "patch_id": hit.id,
-                    "doc_id": hit.entity.get("doc_id"),
-                    "page_number": hit.entity.get("page_number"),
-                    "patch_index": hit.entity.get("patch_index"),
-                    "score": hit.score,
+                    "page_id": hit["id"],
+                    "doc_id": hit["entity"].get("doc_id"),
+                    "page_number": hit["entity"].get("page_number"),
+                    "score": hit["distance"],
                 })
 
-        logger.info(f"Search returned {len(matches)} results")
+        logger.info(f"Search returned {len(matches)} page results")
         return matches
 
-    def get_page_embeddings(self, doc_id: str, page_number: int) -> List[dict]:
-        collection = self._ensure_collection()
-
-        expr = f'doc_id == "{doc_id}" and page_number == {page_number}'
-
-        results = collection.query(
-            expr=expr,
-            output_fields=["patch_id", "doc_id", "page_number", "patch_index", "embedding"],
-        )
-
-        logger.info(f"Retrieved {len(results)} patches for doc={doc_id}, page={page_number}")
-        return results
-
     def delete_document(self, doc_id: str) -> int:
-        collection = self._ensure_collection()
+        self._ensure_collection()
+        client = self._get_client()
 
         expr = f'doc_id == "{doc_id}"'
+        result = client.delete(collection_name=settings.milvus_collection_name, filter=expr)
 
-        result = collection.delete(expr)
-        collection.flush()
-
-        delete_count = result.delete_count
-        logger.info(f"Deleted {delete_count} patches for doc={doc_id}")
+        delete_count = result.get("delete_count", 0)
+        logger.info(f"Deleted {delete_count} pages for doc={doc_id}")
         return delete_count
 
+    def get_collection_stats(self) -> dict[str, Any]:
+        self._ensure_collection()
+        client = self._get_client()
 
-_milvus_service: Optional[MilvusService] = None
+        stats = client.get_collection_stats(collection_name=settings.milvus_collection_name)
+        return stats
+
+    def drop_collection(self) -> None:
+        client = self._get_client()
+        collection_name = settings.milvus_collection_name
+
+        if client.has_collection(collection_name):
+            client.drop_collection(collection_name)
+            logger.info(f"Dropped collection: {collection_name}")
+
+    def disconnect(self) -> None:
+        if self._client is not None:
+            self._client.close()
+            self._client = None
+            logger.info("Disconnected from Milvus")
+
+
+_milvus_service: MilvusService | None = None
 
 
 def get_milvus_service() -> MilvusService:

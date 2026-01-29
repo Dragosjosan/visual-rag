@@ -71,7 +71,7 @@ class IngestionService:
                 patches_stored = self._process_single_page(doc_id, page_number, image)
                 total_patches += patches_stored
                 logger.debug(f"Page {page_number}: stored {patches_stored} patches")
-        except Exception as e:
+        except Exception:
             logger.error(f"Ingestion failed at page processing, rolling back doc_id={doc_id}")
             self._rollback(doc_id)
             raise
@@ -87,13 +87,15 @@ class IngestionService:
         embeddings = self.embedding_service.encode_images([image])
         page_embeddings = embeddings[0]
 
-        patch_ids = self.milvus_service.insert_page_embeddings(
+        num_patches = page_embeddings.shape[0]
+
+        self.milvus_service.insert_page_embeddings(
             doc_id=doc_id,
             page_number=page_number,
             embeddings=page_embeddings,
         )
 
-        return len(patch_ids)
+        return num_patches
 
     def _rollback(self, doc_id: str) -> None:
         try:

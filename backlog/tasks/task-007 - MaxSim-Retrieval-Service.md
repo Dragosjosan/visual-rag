@@ -1,50 +1,100 @@
 ---
 id: task-007
 title: MaxSim Retrieval Service
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-29'
-labels: [phase-3, retrieval]
-dependencies: [task-004, task-005]
+updated_date: '2026-01-29 20:08'
+labels:
+  - phase-3
+  - retrieval
+dependencies:
+  - task-004
+  - task-005
 priority: high
 ---
-
 ## Description
 
-Implement the two-stage retrieval service with MaxSim scoring for late interaction.
-
-**Scope:**
-1. Implement `app/utils/scoring.py` with:
-   - `compute_maxsim()` - Compute Late Interaction MaxSim score
-   - Optimized numpy implementation
-
-2. Implement `app/services/retrieval_service.py` with:
-   - `retrieve()` - Full two-stage retrieval pipeline
-   - Configurable top_k_patches and top_k_pages
+Implement retrieval service using Milvus 2.6.4+ native MAX_SIM with Array of Structs.
 
 **MaxSim Algorithm:**
 ```
 LI(q,d) = Σ_i max_j ⟨E_q^(i) | E_d^(j)⟩
 ```
-For each query token, find max dot product with any doc patch, then sum across all query tokens.
+For each query token, find max dot product with any document patch, then sum across all query tokens.
 
-**Two-Stage Retrieval:**
-1. Encode query → multi-vector [N_tokens, 128]
-2. ANN search per query token → candidate patches (top 100 each)
-3. Collect unique (doc_id, page_number) pairs as candidates
-4. Fetch full page embeddings for each candidate
-5. Compute full MaxSim score for each candidate page
-6. Return top-k pages sorted by score
+**Example:**
+Imagine searching for "red sports car" on a page with image patches of a Ferrari.
 
-**Key Files to Create:**
-- `app/utils/scoring.py`
-- `app/services/retrieval_service.py`
+Query tokens: ["red", "sports", "car"] → 3 embeddings
+Document patches: [wheel, hood, logo, windshield, ...] → 1000 embeddings
+
+For each query token, find the best matching patch:
+- "red" → best match: hood (score: 0.85)
+- "sports" → best match: logo (score: 0.72)
+- "car" → best match: windshield (score: 0.91)
+
+MaxSim score = 0.85 + 0.72 + 0.91 = 2.48
+
+This ensures every query term contributes to the score, and unmatched patches don't hurt.
+
+**Approach: Native MAX_SIM (Milvus 2.6.4+)**
+Instead of custom two-stage retrieval, leverage Milvus native `MAX_SIM_IP` metric type with Array of Structs. Milvus implements the exact same MaxSim formula internally.
+
+**Benefits:**
+- No custom MaxSim scoring code needed
+- Single query returns page-level results with MaxSim scores
+- Simpler implementation, database handles the computation
+
+**Scope:**
+1. Upgrade `pymilvus` to 2.6.4+
+2. Refactor `app/services/milvus_service.py`:
+   - Use Array of Structs schema (all patches per page in one row)
+   - Use `MAX_SIM_IP` metric type for indexing
+   - Search returns page-level results directly
+
+3. Implement `app/services/retrieval_service.py` with:
+   - `retrieve()` - Query encoding + Milvus search
+   - Configurable top_k_pages
+   - Return ranked pages with doc_id, page_number, score
+
+**Schema Change:**
+```python
+# Before: Each patch as separate row
+FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=128)
+
+# After: Array of Structs with all patches per page
+FieldSchema(
+    name="patches",
+    dtype=DataType.ARRAY,
+    element_type=DataType.STRUCT,
+    max_capacity=1030,  # Max patches per page
+    # Each struct contains a vector field
+)
+```
+
+**Index with MAX_SIM:**
+```python
+index_params.add_index(
+    field_name="patches[embedding]",
+    index_type="HNSW",
+    metric_type="MAX_SIM_IP",  # Native MaxSim scoring
+)
+```
+
+**Key Files to Modify/Create:**
+- `app/services/milvus_service.py` - Refactor to Array of Structs schema
+- `app/services/retrieval_service.py` - New retrieval service
+
+**Reference:**
+- [Milvus Array of Structs Docs](https://milvus.io/docs/array-of-structs.md)
+- [Milvus MAX_SIM Blog](https://milvus.io/blog/unlocking-true-entity-level-retrieval-new-array-of-structs-and-max-sim-capabilities-in-milvus.md)
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 compute_maxsim() correctly implements the formula
-- [ ] #2 Two-stage retrieval returns ranked page results
-- [ ] #3 Results include doc_id, page_number, and score
+- [ ] #1 pymilvus upgraded to 2.6.4+
+- [ ] #2 MilvusService uses Array of Structs schema with MAX_SIM_IP
+- [ ] #3 retrieve() returns ranked page results with doc_id, page_number, score
 - [ ] #4 Query "MaxSim formula" retrieves pages 6-7 of ColPali paper
 - [ ] #5 Retrieval latency <500ms for 1000 pages corpus
 <!-- AC:END -->
