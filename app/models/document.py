@@ -21,6 +21,25 @@ class IngestionResponse(BaseModel):
     status: str = Field(description="Ingestion status: completed or failed")
 
 
+class SearchRequest(BaseModel):
+    query: str = Field(description="Search query text")
+    top_k: int = Field(default=5, ge=1, le=100, description="Number of results to return")
+    doc_id: str | None = Field(default=None, description="Optional filter by document ID")
+
+
+class SearchResult(BaseModel):
+    doc_id: str = Field(description="Document identifier")
+    page_number: int = Field(description="Page number (1-indexed)")
+    score: float = Field(description="Relevance score")
+
+
+class SearchResponse(BaseModel):
+    query: str = Field(description="Original search query")
+    results: list[SearchResult] = Field(description="Search results sorted by score descending")
+    total_results: int = Field(description="Number of results returned")
+    search_time_ms: float = Field(description="Search execution time in milliseconds")
+
+
 def validate_filename(filename: str) -> str:
     if not filename:
         raise ValueError("Filename cannot be empty")

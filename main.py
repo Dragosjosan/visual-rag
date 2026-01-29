@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import documents, ingest
+from app.api import documents, ingest, search
 from app.core.config import settings
 
 app = FastAPI(
@@ -20,6 +20,7 @@ app.add_middleware(
 
 app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
 app.include_router(ingest.router, prefix="/api", tags=["ingestion"])
+app.include_router(search.router, prefix="/api", tags=["search"])
 
 
 @app.get("/")
