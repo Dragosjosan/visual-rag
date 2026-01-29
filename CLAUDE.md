@@ -11,7 +11,7 @@
 - Use `pytest` for writing tests
 - Use `assert` in your tests, do NOT just print/log results
 - Use `uv add <library>` instead of editing the pyproject toml, to install it directly.
-- Use types when generating code
+- Use types when generating code. Use the modern way of writing `<type> | None` instead of `Optional` and `list`, `tuple`, etc.
 - Use error handling when generating code.
 - Use small functions for logic. Break big functions into smaller functions, to improve readability.
 - Do NOT write business logic in the FastAPI router. Use services, and the services use utils.

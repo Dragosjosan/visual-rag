@@ -1,10 +1,10 @@
 ---
 id: task-004
 title: ColQwen2 Embedding Service
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-29'
-updated_date: '2026-01-29 13:35'
+updated_date: '2026-01-29 15:03'
 labels:
   - phase-2
   - ingestion

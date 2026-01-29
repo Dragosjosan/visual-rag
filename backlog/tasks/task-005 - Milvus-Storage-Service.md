@@ -1,7 +1,7 @@
 ---
 id: task-005
 title: Milvus Storage Service
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-29'
 updated_date: '2026-01-29 15:03'
@@ -45,10 +45,10 @@ Implement the Milvus service for storing and retrieving patch embeddings with th
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Collection created with correct schema
-- [ ] #2 HNSW index created on embedding field
-- [ ] #3 insert_page_embeddings() inserts ~1024 rows per page
-- [ ] #4 search_patches() returns top-k results with scores
-- [ ] #5 get_page_embeddings() retrieves all patches for a page
-- [ ] #6 delete_document() removes all patches for a doc_id
+- [x] #1 Collection created with correct schema
+- [x] #2 HNSW index created on embedding field
+- [x] #3 insert_page_embeddings() inserts ~1024 rows per page
+- [x] #4 search_patches() returns top-k results with scores
+- [x] #5 get_page_embeddings() retrieves all patches for a page
+- [x] #6 delete_document() removes all patches for a doc_id
 <!-- AC:END -->

@@ -1,11 +1,19 @@
 ---
 id: task-006
 title: Ingestion API Endpoint
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-29'
-labels: [phase-2, ingestion, api, fastapi]
-dependencies: [task-003, task-004, task-005]
+updated_date: '2026-01-29 20:07'
+labels:
+  - phase-2
+  - ingestion
+  - api
+  - fastapi
+dependencies:
+  - task-003
+  - task-004
+  - task-005
 priority: high
 ---
 
@@ -54,10 +62,10 @@ Response:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 POST /ingest endpoint accepts PDF file upload
-- [ ] #2 Optional doc_id parameter overrides auto-generated ID
-- [ ] #3 Response includes pages indexed and patches stored
-- [ ] #4 Endpoint handles errors gracefully with proper HTTP status codes
-- [ ] #5 End-to-end test with ColPali paper PDF succeeds
-- [ ] #6 Patches verified in Milvus after ingestion
+- [x] #1 POST /ingest endpoint accepts PDF file upload
+- [x] #2 Optional doc_id parameter overrides auto-generated ID
+- [x] #3 Response includes pages indexed and patches stored
+- [x] #4 Endpoint handles errors gracefully with proper HTTP status codes
+- [x] #5 End-to-end test with ColPali paper PDF succeeds
+- [x] #6 Patches verified in Milvus after ingestion
 <!-- AC:END -->
