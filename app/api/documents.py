@@ -4,8 +4,8 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from loguru import logger
 
 from app.core.config import settings
-from app.models.document import DocumentUploadResponse
-from app.services.document_service import handle_document_upload
+from app.models.document import DeleteDocumentResponse, DocumentUploadResponse
+from app.services.document_service import delete_document, handle_document_upload
 
 router = APIRouter()
 
@@ -35,3 +35,21 @@ async def upload_document(file: UploadFile = File(...)):
     except Exception as exc:
         logger.opt(exception=exc).error("Unexpected error during document upload")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.delete("/{doc_name}", response_model=DeleteDocumentResponse)
+async def delete_document_endpoint(doc_name: str):
+    try:
+        doc_id, patches_deleted = delete_document(doc_name, DATA_DIR)
+
+        return DeleteDocumentResponse(
+            doc_name=doc_name,
+            doc_id=doc_id,
+            patches_deleted=patches_deleted,
+        )
+
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.opt(exception=exc).error(f"Failed to delete document: {doc_name}")
+        raise HTTPException(status_code=500, detail="Failed to delete document") from exc

@@ -40,6 +40,12 @@ class SearchResponse(BaseModel):
     search_time_ms: float = Field(description="Search execution time in milliseconds")
 
 
+class DeleteDocumentResponse(BaseModel):
+    doc_name: str = Field(description="Document name that was deleted")
+    doc_id: str = Field(description="Document ID (SHA256 hash)")
+    patches_deleted: int = Field(description="Number of patches deleted from Milvus")
+
+
 def validate_filename(filename: str) -> str:
     if not filename:
         raise ValueError("Filename cannot be empty")

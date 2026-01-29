@@ -5,7 +5,8 @@ from fastapi import UploadFile
 from loguru import logger
 
 from app.models.document import validate_filename
-from app.services.pdf_processor import process_pdf_document
+from app.services.milvus_service import get_milvus_service
+from app.services.pdf_processor import generate_doc_id, process_pdf_document
 
 
 async def save_uploaded_file(file: UploadFile, temp_dir: Path) -> Path:
@@ -97,3 +98,19 @@ async def handle_document_upload(
     except Exception as exc:
         logger.opt(exception=exc).error(f"Failed to handle document upload: {file.filename}")
         raise ValueError(f"Failed to handle document upload: {exc}") from exc
+
+
+def delete_document(doc_name: str, data_dir: Path) -> Tuple[str, int]:
+    doc_path = data_dir / "documents" / doc_name / "original.pdf"
+
+    if not doc_path.exists():
+        raise FileNotFoundError(f"Document '{doc_name}' not found")
+
+    doc_id = generate_doc_id(doc_path)
+
+    milvus_service = get_milvus_service()
+    patches_deleted = milvus_service.delete_document(doc_id)
+
+    logger.info(f"Deleted document: doc_name={doc_name}, doc_id={doc_id}, patches={patches_deleted}")
+
+    return doc_id, patches_deleted

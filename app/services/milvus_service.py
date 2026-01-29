@@ -38,7 +38,7 @@ class MilvusService:
         schema = client.create_schema(auto_id=True, enable_dynamic_fields=False)
 
         schema.add_field(
-            field_name="page_id",
+            field_name="patch_id",
             datatype=DataType.INT64,
             is_primary=True,
         )
@@ -51,20 +51,14 @@ class MilvusService:
             field_name="page_number",
             datatype=DataType.INT32,
         )
-
-        struct_schema = client.create_struct_field_schema()
-        struct_schema.add_field(
+        schema.add_field(
+            field_name="patch_index",
+            datatype=DataType.INT32,
+        )
+        schema.add_field(
             field_name="embedding",
             datatype=DataType.FLOAT_VECTOR,
             dim=self.EMBEDDING_DIM,
-        )
-
-        schema.add_field(
-            field_name="patches",
-            datatype=DataType.ARRAY,
-            element_type=DataType.STRUCT,
-            struct_schema=struct_schema,
-            max_capacity=self.MAX_PATCHES_PER_PAGE,
         )
 
         client.create_collection(collection_name=collection_name, schema=schema)
@@ -79,9 +73,9 @@ class MilvusService:
         index_params = client.prepare_index_params()
 
         index_params.add_index(
-            field_name="patches[embedding]",
+            field_name="embedding",
             index_type="HNSW",
-            metric_type="MAX_SIM_IP",
+            metric_type="IP",
             params={"M": 16, "efConstruction": 256},
         )
 
@@ -91,7 +85,7 @@ class MilvusService:
         )
 
         client.create_index(collection_name=collection_name, index_params=index_params)
-        logger.info("Created HNSW index with MAX_SIM_IP on patches[embedding]")
+        logger.info("Created HNSW index on embedding")
 
         client.load_collection(collection_name=collection_name)
         logger.info(f"Loaded collection: {collection_name}")
@@ -120,20 +114,21 @@ class MilvusService:
             num_patches = self.MAX_PATCHES_PER_PAGE
 
         embeddings_list = embeddings.cpu().float().numpy().tolist()
-        patches = [{"embedding": emb} for emb in embeddings_list]
 
         data = [
             {
                 "doc_id": doc_id,
                 "page_number": page_number,
-                "patches": patches,
+                "patch_index": i,
+                "embedding": emb,
             }
+            for i, emb in enumerate(embeddings_list)
         ]
 
-        result = client.insert(collection_name=settings.milvus_collection_name, data=data)
-        logger.info(f"Inserted page with {num_patches} patches for doc={doc_id}, page={page_number}")
+        client.insert(collection_name=settings.milvus_collection_name, data=data)
+        logger.info(f"Inserted {num_patches} patches for doc={doc_id}, page={page_number}")
 
-        return result["insert_count"]
+        return num_patches
 
     def search_pages(
         self,
@@ -149,14 +144,8 @@ class MilvusService:
 
         query_list = query_embeddings.cpu().float().numpy().tolist()
 
-        from pymilvus.client.embedding_list import EmbeddingList
-
-        embedding_list = EmbeddingList()
-        for emb in query_list:
-            embedding_list.add(emb)
-
         search_params = {
-            "metric_type": "MAX_SIM_IP",
+            "metric_type": "IP",
             "params": {"ef": 64},
         }
 
@@ -164,26 +153,36 @@ class MilvusService:
         if doc_id_filter:
             expr = f'doc_id == "{doc_id_filter}"'
 
-        results = client.search(
-            collection_name=settings.milvus_collection_name,
-            data=[embedding_list],
-            anns_field="patches[embedding]",
-            search_params=search_params,
-            limit=top_k,
-            filter=expr,
-            output_fields=["doc_id", "page_number"],
-        )
+        page_scores: dict[tuple[str, int], float] = {}
 
-        matches = []
-        for hits in results:
-            for hit in hits:
-                matches.append({
-                    "page_id": hit["id"],
-                    "doc_id": hit["entity"].get("doc_id"),
-                    "page_number": hit["entity"].get("page_number"),
-                    "score": hit["distance"],
-                })
+        for query_vector in query_list:
+            results = client.search(
+                collection_name=settings.milvus_collection_name,
+                data=[query_vector],
+                anns_field="embedding",
+                search_params=search_params,
+                limit=100,
+                filter=expr,
+                output_fields=["doc_id", "page_number"],
+            )
 
+            for hits in results:
+                for hit in hits:
+                    doc_id = hit["entity"].get("doc_id")
+                    page_number = hit["entity"].get("page_number")
+                    score = hit["distance"]
+                    key = (doc_id, page_number)
+
+                    if score > page_scores.get(key, float("-inf")):
+                        page_scores[key] = score
+
+        aggregated = [
+            {"doc_id": doc_id, "page_number": page_number, "score": score}
+            for (doc_id, page_number), score in page_scores.items()
+        ]
+        aggregated.sort(key=lambda x: x["score"], reverse=True)
+
+        matches = aggregated[:top_k]
         logger.info(f"Search returned {len(matches)} page results")
         return matches
 
