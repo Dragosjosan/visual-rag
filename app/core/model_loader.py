@@ -48,12 +48,12 @@ class ColQwen2ModelLoader:
         if device.type in ["mps", "cpu"]:
             self._model = ColQwen2.from_pretrained(
                 settings.colqwen2_model_name,
-                torch_dtype=torch.bfloat16,
+                dtype=torch.bfloat16,
             ).to(device).eval()
         else:
             self._model = ColQwen2.from_pretrained(
                 settings.colqwen2_model_name,
-                torch_dtype=torch.bfloat16,
+                dtype=torch.bfloat16,
                 device_map=device.type,
             ).eval()
 

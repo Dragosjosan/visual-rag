@@ -14,6 +14,13 @@ class DocumentInfo(BaseModel):
     page_count: int
 
 
+class IngestionResponse(BaseModel):
+    doc_id: str = Field(description="Document identifier (SHA256 hash or custom)")
+    pages_indexed: int = Field(description="Number of pages processed")
+    patches_stored: int = Field(description="Total embedding patches stored in Milvus")
+    status: str = Field(description="Ingestion status: completed or failed")
+
+
 def validate_filename(filename: str) -> str:
     if not filename:
         raise ValueError("Filename cannot be empty")
