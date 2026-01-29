@@ -1,11 +1,16 @@
 ---
 id: task-004
 title: ColQwen2 Embedding Service
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-29'
-labels: [phase-2, ingestion, ml]
-dependencies: [task-002]
+updated_date: '2026-01-29 13:35'
+labels:
+  - phase-2
+  - ingestion
+  - ml
+dependencies:
+  - task-002
 priority: high
 ---
 

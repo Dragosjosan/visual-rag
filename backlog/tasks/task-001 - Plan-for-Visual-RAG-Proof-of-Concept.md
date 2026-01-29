@@ -4,7 +4,7 @@ title: Plan for Visual RAG Proof of Concept
 status: In Progress
 assignee: []
 created_date: '2026-01-29 09:48'
-updated_date: '2026-01-29 10:17'
+updated_date: '2026-01-29 13:35'
 labels: []
 dependencies: []
 priority: high
@@ -69,7 +69,7 @@ Deliverables
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pdfs are converted to images
+- [x] #1 Pdfs are converted to images
 - [ ] #2 Images are converted using ColPali into multi-vectors
 - [ ] #3 Save vectors in milvus with correct schema
 - [ ] #4 Retrieval is tested and works

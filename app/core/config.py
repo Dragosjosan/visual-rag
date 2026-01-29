@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     milvus_port: int = Field(default=19530)
     milvus_collection_name: str = Field(default="visual_rag_patches")
 
-    colqwen2_model_name: str = Field(default="vidore/colqwen2-v0.1")
-    colqwen2_device: str = Field(default="cuda")
+    colqwen2_model_name: str = Field(default="vidore/colqwen2-v1.0-hf")
+    colqwen2_device: str = Field(default="mps")
     colqwen2_batch_size: int = Field(default=4)
 
     ollama_base_url: str = Field(default="http://localhost:11434")
