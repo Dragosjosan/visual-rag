@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     colqwen2_batch_size: int = Field(default=4)
 
     ollama_base_url: str = Field(default="http://localhost:11434")
-    vlm_model_name: str = Field(default="llama2")
+    vlm_model_name: str = Field(default="qwen3-vl:8b")
+    vlm_timeout_seconds: int = Field(default=120)
 
     pdf_dpi: int = Field(default=150)
     pdf_max_pages: int = Field(default=100)
