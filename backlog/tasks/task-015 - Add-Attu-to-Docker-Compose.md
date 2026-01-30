@@ -1,10 +1,13 @@
 ---
 id: task-015
 title: Add Attu to Docker Compose
-status: To Do
+status: Completed
 assignee: []
 created_date: '2026-01-29'
-labels: [infrastructure, milvus]
+updated_date: '2026-01-30'
+labels:
+  - infrastructure
+  - milvus
 dependencies: []
 priority: low
 ---
@@ -32,6 +35,6 @@ attu:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Attu accessible at http://localhost:8080
-- [ ] #2 Can browse collections and data
+- [x] #1 Attu accessible at http://localhost:8080
+- [x] #2 Can browse collections and data
 <!-- AC:END -->
