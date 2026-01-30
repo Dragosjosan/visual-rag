@@ -67,7 +67,7 @@ def test_convert_pdf_to_images_page_numbers_1_indexed(colpali_pdf):
 def test_convert_pdf_to_images_rgb_format(colpali_pdf):
     results = convert_pdf_to_images(colpali_pdf, dpi=72)
 
-    for page_num, image in results:
+    for _, image in results:
         assert image.mode == "RGB"
 
 
