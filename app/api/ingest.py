@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from loguru import logger
@@ -15,8 +14,8 @@ TEMP_DIR = Path(settings.documents_dir) / "temp"
 
 @router.post("/ingest", response_model=IngestionResponse)
 async def ingest_document(
-    file: UploadFile = File(...),
-    doc_id: Optional[str] = Form(default=None),
+    file: UploadFile = File(...),  # noqa: B008
+    doc_id: str | None = Form(default=None),
 ):
     try:
         result_doc_id, pages_indexed, patches_stored = await ingest_uploaded_pdf(

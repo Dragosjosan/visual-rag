@@ -27,6 +27,12 @@ class MilvusService:
 
         if client.has_collection(collection_name):
             logger.info(f"Collection {collection_name} already exists")
+            load_state = client.get_load_state(collection_name=collection_name)
+            if load_state.get("state") != "Loaded":
+                client.load_collection(collection_name=collection_name)
+                logger.info(f"Loaded collection: {collection_name}")
+            else:
+                logger.info(f"Collection {collection_name} already loaded")
             return
 
         self._create_collection()
@@ -41,6 +47,7 @@ class MilvusService:
             field_name="patch_id",
             datatype=DataType.INT64,
             is_primary=True,
+            auto_id=True,
         )
         schema.add_field(
             field_name="doc_id",
@@ -139,6 +146,11 @@ class MilvusService:
         self._ensure_collection()
         client = self._get_client()
 
+        try:
+            client.flush(collection_name=settings.milvus_collection_name)
+        except Exception as exc:
+            logger.opt(exception=exc).error("Flush failed during search")
+
         if query_embeddings.dim() == 1:
             query_embeddings = query_embeddings.unsqueeze(0)
 
@@ -190,11 +202,22 @@ class MilvusService:
         self._ensure_collection()
         client = self._get_client()
 
+        try:
+            client.flush(collection_name=settings.milvus_collection_name)
+        except Exception as exc:
+            logger.opt(exception=exc).error("Flush failed before delete")
+
         expr = f'doc_id == "{doc_id}"'
         result = client.delete(collection_name=settings.milvus_collection_name, filter=expr)
 
         delete_count = result.get("delete_count", 0)
         logger.info(f"Deleted {delete_count} pages for doc={doc_id}")
+
+        try:
+            client.flush(collection_name=settings.milvus_collection_name)
+        except Exception as exc:
+            logger.opt(exception=exc).error("Flush failed after delete")
+
         return delete_count
 
     def get_collection_stats(self) -> dict[str, Any]:

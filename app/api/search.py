@@ -18,7 +18,7 @@ async def search_documents(request: SearchRequest) -> SearchResponse:
         )
     except ValueError as e:
         logger.warning(f"Invalid search request: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
     except Exception as e:
         logger.error(f"Search failed: {e}")
-        raise HTTPException(status_code=500, detail="Search failed")
+        raise HTTPException(status_code=500, detail="Search failed") from No

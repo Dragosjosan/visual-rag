@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 from loguru import logger
 from PIL import Image
@@ -11,7 +9,7 @@ class EmbeddingService:
     def __init__(self) -> None:
         self._loader = get_model_loader()
 
-    def encode_images(self, images: List[Image.Image]) -> torch.Tensor:
+    def encode_images(self, images: list[Image.Image]) -> torch.Tensor:
         if not images:
             raise ValueError("Images list cannot be empty")
 
@@ -55,9 +53,7 @@ class EmbeddingService:
             logger.error(f"Failed to encode query: {e}")
             raise
 
-    def encode_images_batch(
-        self, images: List[Image.Image], batch_size: int
-    ) -> List[torch.Tensor]:
+    def encode_images_batch(self, images: list[Image.Image], batch_size: int) -> list[torch.Tensor]:
         if not images:
             raise ValueError("Images list cannot be empty")
 

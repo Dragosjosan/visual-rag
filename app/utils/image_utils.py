@@ -1,6 +1,5 @@
 import base64
 from io import BytesIO
-from typing import Tuple
 
 from loguru import logger
 from PIL import Image
@@ -54,7 +53,7 @@ def resize_image(
         raise ValueError(f"Failed to resize image: {exc}") from exc
 
 
-def get_image_dimensions(image: Image.Image) -> Tuple[int, int]:
+def get_image_dimensions(image: Image.Image) -> tuple[int, int]:
     try:
         return image.size
     except Exception as exc:

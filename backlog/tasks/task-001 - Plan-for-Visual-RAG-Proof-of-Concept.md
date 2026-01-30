@@ -4,7 +4,7 @@ title: Plan for Visual RAG Proof of Concept
 status: In Progress
 assignee: []
 created_date: '2026-01-29 09:48'
-updated_date: '2026-01-29 15:19'
+updated_date: '2026-01-30 09:31'
 labels: []
 dependencies: []
 priority: high
@@ -73,6 +73,6 @@ Deliverables
 - [x] #2 Images are converted using ColPali into multi-vectors
 - [x] #3 Save vectors in milvus with correct schema
 - [x] #4 Retrieval is tested and works
-- [ ] #5 A visual Qwen model is locally deployed
+- [x] #5 A visual Qwen model is locally deployed
 - [x] #6 Breakdown acceptance criteria into tasks
 <!-- AC:END -->

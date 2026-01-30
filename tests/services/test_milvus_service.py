@@ -1,6 +1,5 @@
 import pytest
 import torch
-from pymilvus import utility
 
 from app.services.milvus_service import MilvusService, get_milvus_service
 
@@ -8,10 +7,8 @@ from app.services.milvus_service import MilvusService, get_milvus_service
 @pytest.fixture
 def milvus_service():
     service = MilvusService()
-    service.connect()
     yield service
-    if utility.has_collection("visual_rag_patches"):
-        utility.drop_collection("visual_rag_patches")
+    service.drop_collection()
     service.disconnect()
 
 
@@ -27,19 +24,20 @@ def small_embeddings():
 
 @pytest.mark.integration
 def test_create_collection(milvus_service):
-    collection = milvus_service._ensure_collection()
+    milvus_service._ensure_collection()
+    client = milvus_service._get_client()
 
-    assert collection is not None
-    assert collection.name == "visual_rag_patches"
-    assert utility.has_collection("visual_rag_patches")
+    assert client.has_collection("visual_rag_patches")
 
 
 @pytest.mark.integration
 def test_collection_schema(milvus_service):
-    collection = milvus_service._ensure_collection()
-    schema = collection.schema
+    milvus_service._ensure_collection()
+    client = milvus_service._get_client()
 
-    field_names = [field.name for field in schema.fields]
+    schema = client.describe_collection("visual_rag_patches")
+    field_names = [field["name"] for field in schema["fields"]]
+
     assert "patch_id" in field_names
     assert "doc_id" in field_names
     assert "page_number" in field_names
@@ -52,9 +50,9 @@ def test_insert_page_embeddings(milvus_service, sample_embeddings):
     doc_id = "test_doc_001"
     page_number = 1
 
-    primary_keys = milvus_service.insert_page_embeddings(doc_id, page_number, sample_embeddings)
+    num_patches = milvus_service.insert_page_embeddings(doc_id, page_number, sample_embeddings)
 
-    assert len(primary_keys) == 1024
+    assert num_patches == 1024
 
 
 @pytest.mark.integration
@@ -74,49 +72,50 @@ def test_insert_page_embeddings_wrong_tensor_shape(milvus_service):
 
 
 @pytest.mark.integration
-def test_search_patches(milvus_service, small_embeddings):
+def test_search_pages(milvus_service, small_embeddings):
     doc_id = "search_test_doc"
     milvus_service.insert_page_embeddings(doc_id, 1, small_embeddings)
 
     query = small_embeddings[0]
-    results = milvus_service.search_patches(query, top_k=5)
+    results = milvus_service.search_pages(query, top_k=5)
 
     assert len(results) > 0
     assert len(results) <= 5
     assert all("doc_id" in r for r in results)
     assert all("page_number" in r for r in results)
-    assert all("patch_index" in r for r in results)
     assert all("score" in r for r in results)
 
 
 @pytest.mark.integration
-def test_search_patches_with_filter(milvus_service, small_embeddings):
+def test_search_pages_with_filter(milvus_service, small_embeddings):
     milvus_service.insert_page_embeddings("doc_a", 1, small_embeddings)
     milvus_service.insert_page_embeddings("doc_b", 1, small_embeddings)
 
     query = small_embeddings[0]
-    results = milvus_service.search_patches(query, top_k=20, doc_id_filter="doc_a")
+    results = milvus_service.search_pages(query, top_k=20, doc_id_filter="doc_a")
 
     assert len(results) > 0
     assert all(r["doc_id"] == "doc_a" for r in results)
 
 
 @pytest.mark.integration
-def test_get_page_embeddings(milvus_service, small_embeddings):
+def test_query_specific_page(milvus_service, small_embeddings):
     doc_id = "get_test_doc"
     page_number = 2
     milvus_service.insert_page_embeddings(doc_id, page_number, small_embeddings)
 
-    results = milvus_service.get_page_embeddings(doc_id, page_number)
+    query = small_embeddings[0]
+    results = milvus_service.search_pages(query, top_k=10, doc_id_filter=doc_id)
 
-    assert len(results) == 10
+    assert len(results) > 0
     assert all(r["doc_id"] == doc_id for r in results)
-    assert all(r["page_number"] == page_number for r in results)
+    assert any(r["page_number"] == page_number for r in results)
 
 
 @pytest.mark.integration
-def test_get_page_embeddings_empty(milvus_service):
-    results = milvus_service.get_page_embeddings("nonexistent_doc", 999)
+def test_query_nonexistent_document(milvus_service, small_embeddings):
+    query = small_embeddings[0]
+    results = milvus_service.search_pages(query, top_k=10, doc_id_filter="nonexistent_doc")
 
     assert len(results) == 0
 
@@ -131,7 +130,8 @@ def test_delete_document(milvus_service, small_embeddings):
 
     assert delete_count == 20
 
-    results = milvus_service.get_page_embeddings(doc_id, 1)
+    query = small_embeddings[0]
+    results = milvus_service.search_pages(query, top_k=10, doc_id_filter=doc_id)
     assert len(results) == 0
 
 

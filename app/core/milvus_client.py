@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections, utility
 
 from app.core.config import settings
@@ -8,7 +6,7 @@ from app.core.config import settings
 class MilvusClient:
     def __init__(self):
         self.collection_name = settings.milvus_collection_name
-        self.collection: Optional[Collection] = None
+        self.collection: Collection | None = None
 
     def connect(self) -> None:
         connections.connect(
@@ -45,7 +43,7 @@ class MilvusClient:
 
         return self.collection
 
-    def get_collection(self) -> Optional[Collection]:
+    def get_collection(self) -> Collection | None:
         if self.collection:
             return self.collection
 

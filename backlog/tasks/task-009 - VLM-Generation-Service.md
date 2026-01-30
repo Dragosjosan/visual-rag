@@ -1,11 +1,16 @@
 ---
 id: task-009
 title: VLM Generation Service
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-01-29'
-labels: [phase-4, generation, vlm]
-dependencies: [task-002]
+updated_date: '2026-01-30 09:31'
+labels:
+  - phase-4
+  - generation
+  - vlm
+dependencies:
+  - task-002
 priority: medium
 ---
 
@@ -16,7 +21,7 @@ Implement the VLM generation service using Ollama with Qwen2-VL for answer gener
 **Scope:**
 1. Set up Ollama on host machine:
    - Install: `brew install ollama`
-   - Pull model: `ollama pull qwen2-vl:7b`
+   - Pull model: `ollama pull qwen3-vl:8b`
    - Verify Metal acceleration
 
 2. Implement `app/services/generation_service.py` with:
@@ -27,7 +32,7 @@ Implement the VLM generation service using Ollama with Qwen2-VL for answer gener
 
 **Technical Details:**
 - Ollama API endpoint: `http://localhost:11434/api/generate`
-- Model: `qwen2-vl:7b`
+- Model: `qwen3-vl:8b`
 - Input: Query text + base64 encoded images
 - Output: Generated answer text
 - Timeout: 120 seconds (VLM can be slow)

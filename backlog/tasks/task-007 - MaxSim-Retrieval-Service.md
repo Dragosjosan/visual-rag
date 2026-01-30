@@ -1,10 +1,10 @@
 ---
 id: task-007
 title: MaxSim Retrieval Service
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-01-29'
-updated_date: '2026-01-29 20:08'
+updated_date: '2026-01-29 21:11'
 labels:
   - phase-3
   - retrieval
@@ -13,6 +13,7 @@ dependencies:
   - task-005
 priority: high
 ---
+
 ## Description
 
 Implement retrieval service using Milvus 2.6.4+ native MAX_SIM with Array of Structs.
