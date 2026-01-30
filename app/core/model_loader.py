@@ -28,8 +28,8 @@ def _get_device(preferred_device: str) -> torch.device:
 
 class ColQwen2ModelLoader:
     _instance: Optional["ColQwen2ModelLoader"] = None
-    _model: Optional[ColQwen2] = None
-    _processor: Optional[ColQwen2Processor] = None
+    _model: ColQwen2 | None = None
+    _processor: ColQwen2Processor | None = None
 
     def __new__(cls) -> "ColQwen2ModelLoader":
         if cls._instance is None:
@@ -46,10 +46,14 @@ class ColQwen2ModelLoader:
         logger.info(f"Using device: {device}")
 
         if device.type in ["mps", "cpu"]:
-            self._model = ColQwen2.from_pretrained(
-                settings.colqwen2_model_name,
-                dtype=torch.bfloat16,
-            ).to(device).eval()
+            self._model = (
+                ColQwen2.from_pretrained(
+                    settings.colqwen2_model_name,
+                    dtype=torch.bfloat16,
+                )
+                .to(device)
+                .eval()
+            )
         else:
             self._model = ColQwen2.from_pretrained(
                 settings.colqwen2_model_name,

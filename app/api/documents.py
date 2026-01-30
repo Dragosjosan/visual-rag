@@ -14,7 +14,7 @@ DATA_DIR.mkdir(exist_ok=True)
 
 
 @router.post("/upload", response_model=DocumentUploadResponse)
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(file: UploadFile = File(...)):  # noqa: B008
     try:
         doc_id, doc_name, pdf_path, page_count = await handle_document_upload(
             file=file,

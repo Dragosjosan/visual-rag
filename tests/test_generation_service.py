@@ -43,9 +43,7 @@ class TestGenerationService:
     @pytest.mark.integration
     @pytest.mark.asyncio
     @pytest.mark.skipif(not is_ollama_available(), reason="Ollama not available")
-    async def test_generate_answer_with_ollama(
-        self, service: GenerationService, sample_image: Image.Image
-    ) -> None:
+    async def test_generate_answer_with_ollama(self, service: GenerationService, sample_image: Image.Image) -> None:
         try:
             answer = await service.generate_answer(
                 query="Describe what you see in this image.",

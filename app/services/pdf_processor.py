@@ -3,7 +3,6 @@ import io
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import List, Tuple
 
 import pymupdf
 from loguru import logger
@@ -35,7 +34,7 @@ def convert_pdf_to_images(
     thread_count: int | None = None,
     output_dir: str | Path | None = None,
     save_format: str = "PNG",
-) -> List[Tuple[int, Image.Image]]:
+) -> list[tuple[int, Image.Image]]:
     try:
         file_path = Path(file_path)
         if not file_path.exists():
@@ -74,9 +73,7 @@ def convert_pdf_to_images(
             doc_name = file_path.stem
             save_images(results, output_dir, doc_name, save_format)
 
-        logger.info(
-            f"Successfully converted PDF to {len(results)} images: {file_path}"
-        )
+        logger.info(f"Successfully converted PDF to {len(results)} images: {file_path}")
         return results
 
     except Exception as exc:
@@ -90,7 +87,7 @@ def convert_pdf_to_images_parallel(
     max_workers: int = 4,
     output_dir: str | Path | None = None,
     save_format: str = "PNG",
-) -> List[Tuple[int, Image.Image]]:
+) -> list[tuple[int, Image.Image]]:
     try:
         file_path = Path(file_path)
         if not file_path.exists():
@@ -105,10 +102,7 @@ def convert_pdf_to_images_parallel(
         if max_workers <= 0:
             raise ValueError(f"max_workers must be positive, got {max_workers}")
 
-        logger.info(
-            f"Converting PDF to images (parallel): {file_path} with DPI={dpi}, "
-            f"max_workers={max_workers}"
-        )
+        logger.info(f"Converting PDF to images (parallel): {file_path} with DPI={dpi}, max_workers={max_workers}")
 
         zoom = dpi / 72
         matrix = pymupdf.Matrix(zoom, zoom)
@@ -119,9 +113,7 @@ def convert_pdf_to_images_parallel(
         results = []
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_page = {
-                executor.submit(
-                    _process_page, file_path, page_num, matrix
-                ): page_num + 1
+                executor.submit(_process_page, file_path, page_num, matrix): page_num + 1
                 for page_num in range(page_count)
             }
 
@@ -142,24 +134,20 @@ def convert_pdf_to_images_parallel(
             doc_name = file_path.stem
             save_images(results, output_dir, doc_name, save_format)
 
-        logger.info(
-            f"Successfully converted PDF to {len(results)} images (parallel): {file_path}"
-        )
+        logger.info(f"Successfully converted PDF to {len(results)} images (parallel): {file_path}")
         return results
 
     except Exception as exc:
-        logger.opt(exception=exc).error(
-            f"Failed to convert PDF to images (parallel): {file_path}"
-        )
+        logger.opt(exception=exc).error(f"Failed to convert PDF to images (parallel): {file_path}")
         raise ValueError(f"Failed to convert PDF to images: {exc}") from exc
 
 
 def save_images(
-    images: List[Tuple[int, Image.Image]],
+    images: list[tuple[int, Image.Image]],
     output_dir: str | Path,
     doc_name: str,
     format: str = "PNG",
-) -> List[Path]:
+) -> list[Path]:
     try:
         images_dir = Path(output_dir) / "images" / doc_name
         images_dir.mkdir(parents=True, exist_ok=True)
@@ -174,9 +162,7 @@ def save_images(
 
             logger.debug(f"Saved page {page_num} to {file_path}")
 
-        logger.info(
-            f"Saved {len(saved_paths)} images to {images_dir}"
-        )
+        logger.info(f"Saved {len(saved_paths)} images to {images_dir}")
         return saved_paths
 
     except Exception as exc:
@@ -217,7 +203,7 @@ def process_pdf_document(
     save_images_flag: bool = True,
     use_parallel: bool = False,
     max_workers: int = 4,
-) -> Tuple[str, Path | None, List[Path], List[Tuple[int, Image.Image]]]:
+) -> tuple[str, Path | None, list[Path], list[tuple[int, Image.Image]]]:
     try:
         pdf_path = Path(pdf_path)
         if not pdf_path.exists():
@@ -235,9 +221,7 @@ def process_pdf_document(
             saved_pdf_path = save_pdf_document(pdf_path, output_dir, doc_name)
 
         if use_parallel:
-            images = convert_pdf_to_images_parallel(
-                pdf_path, dpi=dpi, max_workers=max_workers
-            )
+            images = convert_pdf_to_images_parallel(pdf_path, dpi=dpi, max_workers=max_workers)
         else:
             images = convert_pdf_to_images(pdf_path, dpi=dpi)
 
@@ -245,10 +229,7 @@ def process_pdf_document(
         if save_images_flag:
             saved_image_paths = save_images(images, output_dir, doc_name)
 
-        logger.info(
-            f"Successfully processed PDF: {len(images)} pages, "
-            f"doc_id: {doc_id}, doc_name: {doc_name}"
-        )
+        logger.info(f"Successfully processed PDF: {len(images)} pages, doc_id: {doc_id}, doc_name: {doc_name}")
 
         return doc_id, saved_pdf_path, saved_image_paths, images
 

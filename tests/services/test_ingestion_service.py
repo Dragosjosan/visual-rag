@@ -26,9 +26,7 @@ def test_ingest_pdf_generates_doc_id(ingestion_service, sample_pdf_path):
     if not sample_pdf_path.exists():
         pytest.skip("Sample PDF not available")
 
-    doc_id, pages, patches = ingestion_service.ingest_pdf_from_path(
-        sample_pdf_path, max_pages=1
-    )
+    doc_id, pages, patches = ingestion_service.ingest_pdf_from_path(sample_pdf_path, max_pages=1)
 
     assert doc_id is not None
     assert len(doc_id) == 64
@@ -43,9 +41,7 @@ def test_ingest_pdf_custom_doc_id(ingestion_service, sample_pdf_path):
 
     custom_id = "my-custom-doc-id"
 
-    doc_id, pages, patches = ingestion_service.ingest_pdf_from_path(
-        sample_pdf_path, doc_id=custom_id, max_pages=1
-    )
+    doc_id, pages, patches = ingestion_service.ingest_pdf_from_path(sample_pdf_path, doc_id=custom_id, max_pages=1)
 
     assert doc_id == custom_id
     assert pages == 1

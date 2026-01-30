@@ -1,11 +1,17 @@
 ---
 id: task-011
 title: FastAPI Backend
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-01-29'
-labels: [phase-5, api]
-dependencies: [task-006, task-008, task-010]
+updated_date: '2026-01-30 09:32'
+labels:
+  - phase-5
+  - api
+dependencies:
+  - task-006
+  - task-008
+  - task-010
 priority: medium
 ---
 

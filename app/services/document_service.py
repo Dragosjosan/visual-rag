@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Tuple
 
 from fastapi import UploadFile
 from loguru import logger
@@ -36,7 +35,7 @@ def process_uploaded_document(
     dpi: int = 144,
     use_parallel: bool = True,
     max_workers: int = 4,
-) -> Tuple[str, Path, int]:
+) -> tuple[str, Path, int]:
     try:
         doc_id, saved_pdf_path, image_paths, images = process_pdf_document(
             pdf_path=pdf_path,
@@ -51,10 +50,7 @@ def process_uploaded_document(
 
         page_count = len(images)
 
-        logger.info(
-            f"Processed document: doc_id={doc_id}, "
-            f"doc_name={doc_name}, pages={page_count}"
-        )
+        logger.info(f"Processed document: doc_id={doc_id}, doc_name={doc_name}, pages={page_count}")
 
         return doc_id, saved_pdf_path, page_count
 
@@ -67,7 +63,7 @@ async def handle_document_upload(
     file: UploadFile,
     data_dir: Path,
     dpi: int = 144,
-) -> Tuple[str, str, Path, int]:
+) -> tuple[str, str, Path, int]:
     try:
         if not file.filename:
             raise ValueError("No filename provided")
@@ -100,7 +96,7 @@ async def handle_document_upload(
         raise ValueError(f"Failed to handle document upload: {exc}") from exc
 
 
-def delete_document(doc_name: str, data_dir: Path) -> Tuple[str, int]:
+def delete_document(doc_name: str, data_dir: Path) -> tuple[str, int]:
     doc_path = data_dir / "documents" / doc_name / "original.pdf"
 
     if not doc_path.exists():

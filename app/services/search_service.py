@@ -3,7 +3,7 @@ import time
 from loguru import logger
 
 from app.models.document import SearchResponse, SearchResult
-from app.services.retrieval_service import get_retrieval_service, RetrievalService
+from app.services.retrieval_service import RetrievalService, get_retrieval_service
 
 
 class SearchService:
@@ -41,10 +41,7 @@ class SearchService:
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000
 
-        logger.info(
-            f"Search completed: query='{query}', "
-            f"results={len(search_results)}, time={elapsed_ms:.2f}ms"
-        )
+        logger.info(f"Search completed: query='{query}', results={len(search_results)}, time={elapsed_ms:.2f}ms")
 
         return SearchResponse(
             query=query,
