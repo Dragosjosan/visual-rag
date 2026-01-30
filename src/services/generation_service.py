@@ -6,7 +6,7 @@ import httpx
 from loguru import logger
 from PIL import Image
 
-from app.core.config import settings
+from src.core.config import settings
 
 PROMPT_TEMPLATE = """You are a helpful assistant that answers questions based on the provided document images.
 

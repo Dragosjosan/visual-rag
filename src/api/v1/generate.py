@@ -4,11 +4,11 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
-from app.core.config import settings
-from app.models.document import GenerateRequest, GenerateResponse, SourceReference
-from app.services.generation_service import get_generation_service
-from app.services.search_service import get_search_service
-from app.utils.document_utils import get_doc_id_to_name_mapping, get_page_image_path
+from src.core.config import settings
+from src.models.document import GenerateRequest, GenerateResponse, SourceReference
+from src.services.generation_service import get_generation_service
+from src.services.search_service import get_search_service
+from src.utils.document_utils import get_doc_id_to_name_mapping, get_page_image_path
 
 router = APIRouter()
 

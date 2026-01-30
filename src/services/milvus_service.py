@@ -4,7 +4,7 @@ import torch
 from loguru import logger
 from pymilvus import DataType, MilvusClient
 
-from app.core.config import settings
+from src.core.config import settings
 
 
 class MilvusService:

@@ -1,6 +1,6 @@
 from loguru import logger
 
-from app.core.milvus_client import milvus_client
+from src.core.milvus_client import milvus_client
 
 
 def test_milvus_connection_and_collection():

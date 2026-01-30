@@ -2,8 +2,8 @@ import time
 
 from loguru import logger
 
-from app.models.document import SearchResponse, SearchResult
-from app.services.retrieval_service import RetrievalService, get_retrieval_service
+from src.models.document import SearchResponse, SearchResult
+from src.services.retrieval_service import RetrievalService, get_retrieval_service
 
 
 class SearchService:

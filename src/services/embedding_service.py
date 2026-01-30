@@ -2,7 +2,7 @@ import torch
 from loguru import logger
 from PIL import Image
 
-from app.core.model_loader import get_model_loader
+from src.core.model_loader import get_model_loader
 
 
 class EmbeddingService:

@@ -1,6 +1,30 @@
-version: '3.8'
-
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: visual-rag-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=${MILVUS_PORT:-19530}
+      - MILVUS_COLLECTION_NAME=${MILVUS_COLLECTION_NAME:-visual_rag_patches}
+      - COLQWEN2_MODEL_NAME=${COLQWEN2_MODEL_NAME:-vidore/colqwen2-v0.1}
+      - COLQWEN2_DEVICE=${COLQWEN2_DEVICE:-mps}
+      - COLQWEN2_BATCH_SIZE=${COLQWEN2_BATCH_SIZE:-4}
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - VLM_MODEL_NAME=${VLM_MODEL_NAME:-qwen3-vl:8b}
+      - VLM_TIMEOUT_SECONDS=${VLM_TIMEOUT_SECONDS:-120}
+      - PDF_DPI=${PDF_DPI:-150}
+      - PDF_MAX_PAGES=${PDF_MAX_PAGES:-100}
+      - TOP_K=${TOP_K:-5}
+      - SIMILARITY_THRESHOLD=${SIMILARITY_THRESHOLD:-0.4}
+    depends_on:
+      - milvus
+    restart: unless-stopped
   etcd:
     image: quay.io/coreos/etcd:v3.5.5
     environment:
@@ -51,6 +75,15 @@ services:
     depends_on:
       - etcd
       - minio
+
+  attu:
+    image: zilliz/attu:latest
+    ports:
+      - "8080:3000"
+    environment:
+      - MILVUS_URL=milvus:19530
+    depends_on:
+      - milvus
 
 volumes:
   etcd-data:

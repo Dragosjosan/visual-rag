@@ -2,7 +2,7 @@ import pytest
 import torch
 from PIL import Image
 
-from app.services.embedding_service import EmbeddingService
+from src.services.embedding_service import EmbeddingService
 
 
 @pytest.fixture

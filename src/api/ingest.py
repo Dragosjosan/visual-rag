@@ -3,9 +3,9 @@ from pathlib import Path
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from loguru import logger
 
-from app.core.config import settings
-from app.models.document import IngestionResponse
-from app.services.ingestion_service import ingest_uploaded_pdf
+from src.core.config import settings
+from src.models.document import IngestionResponse
+from src.services.ingestion_service import ingest_uploaded_pdf
 
 router = APIRouter()
 

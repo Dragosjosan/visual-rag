@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
-from app.models.document import SearchRequest, SearchResponse
-from app.services.search_service import get_search_service
+from src.models.document import SearchRequest, SearchResponse
+from src.services.search_service import get_search_service
 
 router = APIRouter()
 

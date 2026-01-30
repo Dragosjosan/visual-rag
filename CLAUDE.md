@@ -14,7 +14,7 @@
 - Use types when generating code. Use the modern way of writing `<type> | None` instead of `Optional` and `list`, `tuple`, etc.
 - Use error handling when generating code.
 - Use small functions for logic. Break big functions into smaller functions, to improve readability.
-- Do NOT write business logic in the FastAPI router. Use services, and the services use utils.
+- Use services and utils for all routers. No business logic in the router.
 
 ## Purpose
 - Use ColPali to create visual embeddings
