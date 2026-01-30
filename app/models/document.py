@@ -46,6 +46,25 @@ class DeleteDocumentResponse(BaseModel):
     patches_deleted: int = Field(description="Number of patches deleted from Milvus")
 
 
+class GenerateRequest(BaseModel):
+    query: str = Field(description="Question to answer using RAG")
+    top_k: int = Field(default=3, ge=1, le=20, description="Number of document pages to retrieve for context")
+    doc_id: str | None = Field(default=None, description="Optional filter by document ID")
+
+
+class SourceReference(BaseModel):
+    doc_id: str = Field(description="Document identifier")
+    page_number: int = Field(description="Page number (1-indexed)")
+    score: float = Field(description="Relevance score")
+
+
+class GenerateResponse(BaseModel):
+    query: str = Field(description="Original question")
+    answer: str = Field(description="Generated answer based on retrieved context")
+    sources: list[SourceReference] = Field(description="Source pages used to generate the answer")
+    generation_time_ms: float = Field(description="Total generation time in milliseconds")
+
+
 def validate_filename(filename: str) -> str:
     if not filename:
         raise ValueError("Filename cannot be empty")
