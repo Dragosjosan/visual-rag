@@ -3,9 +3,9 @@ from pathlib import Path
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from loguru import logger
 
-from app.core.config import settings
-from app.models.document import DeleteDocumentResponse, DocumentUploadResponse
-from app.services.document_service import delete_document, handle_document_upload
+from src.core.config import settings
+from src.models.document import DeleteDocumentResponse, DocumentUploadResponse
+from src.services.document_service import delete_document, handle_document_upload
 
 router = APIRouter()
 

@@ -3,9 +3,9 @@ from typing import Any
 from loguru import logger
 from pydantic import BaseModel
 
-from app.core.config import settings
-from app.services.embedding_service import get_embedding_service
-from app.services.milvus_service import get_milvus_service
+from src.core.config import settings
+from src.services.embedding_service import get_embedding_service
+from src.services.milvus_service import get_milvus_service
 
 
 class RetrievalResult(BaseModel):

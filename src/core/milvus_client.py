@@ -1,6 +1,6 @@
 from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections, utility
 
-from app.core.config import settings
+from src.core.config import settings
 
 
 class MilvusClient:

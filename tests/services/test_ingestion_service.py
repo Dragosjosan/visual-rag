@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from app.services.ingestion_service import IngestionService
+from src.services.ingestion_service import IngestionService
 
 
 @pytest.fixture

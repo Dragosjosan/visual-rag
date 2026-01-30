@@ -4,10 +4,10 @@ from fastapi import UploadFile
 from loguru import logger
 from PIL import Image
 
-from app.models.document import validate_filename
-from app.services.embedding_service import EmbeddingService, get_embedding_service
-from app.services.milvus_service import MilvusService, get_milvus_service
-from app.services.pdf_processor import convert_pdf_to_images, generate_doc_id
+from src.models.document import validate_filename
+from src.services.embedding_service import EmbeddingService, get_embedding_service
+from src.services.milvus_service import MilvusService, get_milvus_service
+from src.services.pdf_processor import convert_pdf_to_images, generate_doc_id
 
 
 class IngestionService:

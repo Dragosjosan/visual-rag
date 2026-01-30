@@ -4,7 +4,7 @@ import torch
 from colpali_engine.models import ColQwen2, ColQwen2Processor
 from loguru import logger
 
-from app.core.config import settings
+from src.core.config import settings
 
 
 def _get_device(preferred_device: str) -> torch.device:

@@ -3,9 +3,9 @@ from pathlib import Path
 from fastapi import UploadFile
 from loguru import logger
 
-from app.models.document import validate_filename
-from app.services.milvus_service import get_milvus_service
-from app.services.pdf_processor import generate_doc_id, process_pdf_document
+from src.models.document import validate_filename
+from src.services.milvus_service import get_milvus_service
+from src.services.pdf_processor import generate_doc_id, process_pdf_document
 
 
 async def save_uploaded_file(file: UploadFile, temp_dir: Path) -> Path:

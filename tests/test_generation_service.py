@@ -2,7 +2,7 @@ import httpx
 import pytest
 from PIL import Image
 
-from app.services.generation_service import GenerationService, get_generation_service
+from src.services.generation_service import GenerationService, get_generation_service
 
 
 def is_ollama_available() -> bool:

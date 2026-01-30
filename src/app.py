@@ -4,10 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from app.api.v1.router import api_router
-from app.core.milvus_client import milvus_client
-from app.core.model_loader import get_model_loader
-from app.services.generation_service import get_generation_service
+from src.api.v1.router import api_router
+from src.core.milvus_client import milvus_client
+from src.core.model_loader import get_model_loader
+from src.services.generation_service import get_generation_service
 
 
 @asynccontextmanager

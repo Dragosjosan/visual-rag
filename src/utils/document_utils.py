@@ -2,7 +2,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from app.services.pdf_processor import generate_doc_id
+from src.services.pdf_processor import generate_doc_id
 
 
 def get_doc_id_to_name_mapping(data_dir: Path) -> dict[str, str]:

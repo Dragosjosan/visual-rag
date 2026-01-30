@@ -14,13 +14,10 @@ Visual RAG system using ColPali for visual embeddings and Milvus for vector stor
 # Build and start all services (Milvus, etcd, minio, Attu)
 make build
 make run
-
-# Or using docker compose directly
-docker compose -f docker-compose.yml build
-docker compose -f docker-compose.yml up -d
 ```
 
 Services will be available at:
+- **Swagger API Documentation**: http://localhost:8000/docs
 - **Backend API**: http://localhost:8000
 - **Attu (Milvus UI)**: http://localhost:8080
 - **Milvus**: localhost:19530
@@ -29,19 +26,38 @@ Services will be available at:
 
 ```bash
 make down
-
-# Or using docker compose directly
-docker compose -f docker-compose.yml down
 ```
+
+## API Documentation
+
+FastAPI provides interactive API documentation via Swagger UI. Access it at:
+
+**http://localhost:8000/docs**
+
+The Swagger UI allows you to:
+- View all available endpoints and their parameters
+- Try out API calls directly in your browser
+- See request/response schemas and examples
+- Download the OpenAPI specification
+
+Alternative documentation format available at: http://localhost:8000/redoc
 
 ## Complete Workflow
 
 ### 1. Ingest a Document
 
-The `/api/ingest` endpoint processes and stores a PDF document:
+The `/api/v1/ingest` endpoint processes and stores a PDF document.
 
+**Using Swagger UI:**
+1. Navigate to http://localhost:8000/docs
+2. Find the `POST /api/v1/ingest` endpoint
+3. Click "Try it out"
+4. Upload your PDF file
+5. Click "Execute"
+
+**Using curl:**
 ```bash
-curl -X POST http://localhost:8000/api/ingest \
+curl -X POST http://localhost:8000/api/v1/ingest \
   -F "file=@document.pdf"
 ```
 
@@ -68,10 +84,18 @@ curl -X POST http://localhost:8000/api/ingest \
 
 ### 2. Search for Information
 
-Search using natural language queries:
+Search using natural language queries.
 
+**Using Swagger UI:**
+1. Navigate to http://localhost:8000/docs
+2. Find the `POST /api/v1/search` endpoint
+3. Click "Try it out"
+4. Enter your search query and top_k value
+5. Click "Execute"
+
+**Using curl:**
 ```bash
-curl -X POST http://localhost:8000/api/search \
+curl -X POST http://localhost:8000/api/v1/search \
   -H "Content-Type: application/json" \
   -d '{"query": "What is ViDoRe?", "top_k": 5}'
 ```
@@ -104,10 +128,18 @@ curl -X POST http://localhost:8000/api/search \
 
 ### 3. Delete a Document
 
-Remove a document and all its pages from the system:
+Remove a document and all its pages from the system.
 
+**Using Swagger UI:**
+1. Navigate to http://localhost:8000/docs
+2. Find the `DELETE /api/v1/documents/{document_name}` endpoint
+3. Click "Try it out"
+4. Enter the document name
+5. Click "Execute"
+
+**Using curl:**
 ```bash
-curl -X DELETE http://localhost:8000/api/documents/document.pdf
+curl -X DELETE http://localhost:8000/api/v1/documents/document.pdf
 ```
 
 **Expected successful response:**
@@ -136,32 +168,6 @@ Access it at: http://localhost:8080
 - Host: milvus
 - Port: 19530
 
-## API Endpoints Reference
-
-### Upload Document (Legacy)
-```bash
-curl -X POST http://localhost:8000/api/documents/upload \
-  -F "file=@document.pdf"
-```
-
-### Ingest Document
-```bash
-curl -X POST http://localhost:8000/api/ingest \
-  -F "file=@document.pdf"
-```
-
-### Search
-```bash
-curl -X POST http://localhost:8000/api/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "your search query", "top_k": 5}'
-```
-
-### Delete Document
-```bash
-curl -X DELETE http://localhost:8000/api/documents/{doc_name}
-```
-
 ## Troubleshooting
 
 ### Services won't start
@@ -178,6 +184,10 @@ make run
 - Ensure all services are healthy: `docker compose -f docker-compose.yml ps`
 - Milvus requires etcd and minio to be running first
 - Wait 30-60 seconds after startup for Milvus to be fully ready
+
+### API endpoint not found (404 errors)
+- Verify you're using the correct API version prefix: `/api/v1/`
+- Check the Swagger docs at http://localhost:8000/docs for the current endpoint paths
 
 ### Clear all data
 ```bash

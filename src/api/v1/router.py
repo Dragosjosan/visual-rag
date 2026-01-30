@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import documents, generate, ingest, search
+from src.api.v1 import documents, generate, ingest, search
 
 api_router = APIRouter()
 

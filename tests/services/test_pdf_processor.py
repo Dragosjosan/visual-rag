@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from app.services.pdf_processor import (
+from src.services.pdf_processor import (
     convert_pdf_to_images,
     convert_pdf_to_images_parallel,
     generate_doc_id,

@@ -4,7 +4,7 @@ from io import BytesIO
 import pytest
 from PIL import Image
 
-from app.utils.image_utils import (
+from src.utils.image_utils import (
     get_image_dimensions,
     image_to_base64,
     resize_image,

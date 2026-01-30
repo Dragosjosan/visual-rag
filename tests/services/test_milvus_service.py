@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from app.services.milvus_service import MilvusService, get_milvus_service
+from src.services.milvus_service import MilvusService, get_milvus_service
 
 
 @pytest.fixture
