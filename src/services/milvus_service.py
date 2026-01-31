@@ -47,7 +47,6 @@ class MilvusService:
             field_name="patch_id",
             datatype=DataType.INT64,
             is_primary=True,
-            auto_id=True,
         )
         schema.add_field(
             field_name="doc_id",
@@ -158,7 +157,7 @@ class MilvusService:
 
         search_params = {
             "metric_type": "IP",
-            "params": {"ef": 64},
+            "params": {"ef": 128},
         }
 
         expr = None
@@ -197,6 +196,19 @@ class MilvusService:
         matches = aggregated[:top_k]
         logger.info(f"Search returned {len(matches)} page results")
         return matches
+
+    def document_exists(self, doc_id: str) -> bool:
+        self._ensure_collection()
+        client = self._get_client()
+
+        results = client.query(
+            collection_name=settings.milvus_collection_name,
+            filter=f'doc_id == "{doc_id}"',
+            output_fields=["doc_id"],
+            limit=1,
+        )
+
+        return len(results) > 0
 
     def delete_document(self, doc_id: str) -> int:
         self._ensure_collection()

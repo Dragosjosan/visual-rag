@@ -9,9 +9,15 @@ class DocumentUploadResponse(BaseModel):
 
 
 class DocumentInfo(BaseModel):
-    doc_id: str
-    doc_name: str
-    page_count: int
+    doc_id: str = Field(description="SHA256 hash of the document")
+    doc_name: str = Field(description="Document name (filename without extension)")
+    page_count: int = Field(description="Number of pages in the document")
+    pdf_path: str = Field(description="Path to the PDF file")
+
+
+class DocumentListResponse(BaseModel):
+    documents: list[DocumentInfo] = Field(description="List of documents")
+    total: int = Field(description="Total number of documents")
 
 
 class IngestionResponse(BaseModel):
