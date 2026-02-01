@@ -1,11 +1,15 @@
 import pytest
 import torch
 
+from src.core.config import settings
 from src.services.milvus_service import MilvusService, get_milvus_service
+
+TEST_COLLECTION_NAME = "visual_rag_patches_test"
 
 
 @pytest.fixture
-def milvus_service():
+def milvus_service(monkeypatch):
+    monkeypatch.setattr(settings, "milvus_collection_name", TEST_COLLECTION_NAME)
     service = MilvusService()
     yield service
     service.drop_collection()
@@ -27,7 +31,7 @@ def test_create_collection(milvus_service):
     milvus_service._ensure_collection()
     client = milvus_service._get_client()
 
-    assert client.has_collection("visual_rag_patches")
+    assert client.has_collection(TEST_COLLECTION_NAME)
 
 
 @pytest.mark.integration
@@ -35,7 +39,7 @@ def test_collection_schema(milvus_service):
     milvus_service._ensure_collection()
     client = milvus_service._get_client()
 
-    schema = client.describe_collection("visual_rag_patches")
+    schema = client.describe_collection(TEST_COLLECTION_NAME)
     field_names = [field["name"] for field in schema["fields"]]
 
     assert "patch_id" in field_names
@@ -143,8 +147,17 @@ def test_delete_document_nonexistent(milvus_service):
 
 
 @pytest.mark.integration
-def test_get_milvus_service_singleton():
+def test_get_milvus_service_singleton(monkeypatch):
+    monkeypatch.setattr(settings, "milvus_collection_name", TEST_COLLECTION_NAME)
+
+    import src.services.milvus_service as milvus_module
+    monkeypatch.setattr(milvus_module, "_milvus_service", None)
+
     service1 = get_milvus_service()
     service2 = get_milvus_service()
 
     assert service1 is service2
+
+    service1.drop_collection()
+    service1.disconnect()
+    monkeypatch.setattr(milvus_module, "_milvus_service", None)
