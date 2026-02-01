@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from loguru import logger
 
 from src.core.config import settings
@@ -15,21 +15,21 @@ TEMP_DIR = Path(settings.documents_dir) / "temp"
 @router.post("/ingest", response_model=IngestionResponse)
 async def ingest_document(
     file: UploadFile = File(...),  # noqa: B008
-    doc_id: str | None = Form(default=None),
 ):
     try:
         result_doc_id, pages_indexed, patches_stored = await ingest_uploaded_pdf(
             file=file,
             temp_dir=TEMP_DIR,
-            doc_id=doc_id,
             dpi=settings.pdf_dpi,
         )
+
+        status = "skipped" if pages_indexed == 0 and patches_stored == 0 else "completed"
 
         return IngestionResponse(
             doc_id=result_doc_id,
             pages_indexed=pages_indexed,
             patches_stored=patches_stored,
-            status="completed",
+            status=status,
         )
 
     except ValueError as e:

@@ -28,6 +28,22 @@ def generate_doc_id(file_path: str | Path) -> str:
         raise ValueError(f"Failed to generate doc_id: {exc}") from exc
 
 
+def count_pdf_pages(file_path: str | Path) -> int:
+    try:
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"File not found: {file_path}")
+
+        pdf_document = pymupdf.open(file_path)
+        page_count = len(pdf_document)
+        pdf_document.close()
+
+        return page_count
+    except Exception as exc:
+        logger.opt(exception=exc).error(f"Failed to count pages for {file_path}")
+        raise ValueError(f"Failed to count PDF pages: {exc}") from exc
+
+
 def convert_pdf_to_images(
     file_path: str | Path,
     dpi: int = 144,

@@ -7,3 +7,5 @@
 .env
 # Data
 data/
+# IDE
+.vscode

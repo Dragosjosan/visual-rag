@@ -3,9 +3,9 @@ from pathlib import Path
 from fastapi import UploadFile
 from loguru import logger
 
-from src.models.document import validate_filename
+from src.models.document import DocumentInfo, validate_filename
 from src.services.milvus_service import get_milvus_service
-from src.services.pdf_processor import generate_doc_id, process_pdf_document
+from src.services.pdf_processor import count_pdf_pages, generate_doc_id, process_pdf_document
 
 
 async def save_uploaded_file(file: UploadFile, temp_dir: Path) -> Path:
@@ -110,3 +110,86 @@ def delete_document(doc_name: str, data_dir: Path) -> tuple[str, int]:
     logger.info(f"Deleted document: doc_name={doc_name}, doc_id={doc_id}, patches={patches_deleted}")
 
     return doc_id, patches_deleted
+
+
+def list_documents(data_dir: Path) -> list[DocumentInfo]:
+    documents_dir = data_dir / "documents"
+    if not documents_dir.exists():
+        return []
+
+    documents = []
+    for doc_path in documents_dir.iterdir():
+        if not doc_path.is_dir():
+            continue
+
+        doc_name = doc_path.name
+        pdf_path = doc_path / "original.pdf"
+
+        if not pdf_path.exists():
+            logger.warning(f"No original.pdf found for {doc_name}")
+            continue
+
+        try:
+            doc_id = generate_doc_id(pdf_path)
+            page_count = count_pdf_pages(pdf_path)
+            documents.append(
+                DocumentInfo(
+                    doc_id=doc_id,
+                    doc_name=doc_name,
+                    page_count=page_count,
+                    pdf_path=str(pdf_path),
+                )
+            )
+        except Exception as exc:
+            logger.opt(exception=exc).warning(f"Failed to get info for {doc_name}")
+
+    logger.info(f"Listed {len(documents)} documents")
+    return documents
+
+
+def get_document_by_name(doc_name: str, data_dir: Path) -> DocumentInfo:
+    pdf_path = data_dir / "documents" / doc_name / "original.pdf"
+
+    if not pdf_path.exists():
+        raise FileNotFoundError(f"Document '{doc_name}' not found")
+
+    doc_id = generate_doc_id(pdf_path)
+    page_count = count_pdf_pages(pdf_path)
+
+    return DocumentInfo(
+        doc_id=doc_id,
+        doc_name=doc_name,
+        page_count=page_count,
+        pdf_path=str(pdf_path),
+    )
+
+
+def get_document_by_id(doc_id: str, data_dir: Path) -> DocumentInfo:
+    documents_dir = data_dir / "documents"
+    if not documents_dir.exists():
+        raise FileNotFoundError(f"Document with id '{doc_id}' not found")
+
+    for doc_path in documents_dir.iterdir():
+        if not doc_path.is_dir():
+            continue
+
+        doc_name = doc_path.name
+        pdf_path = doc_path / "original.pdf"
+
+        if not pdf_path.exists():
+            continue
+
+        try:
+            current_doc_id = generate_doc_id(pdf_path)
+            if current_doc_id == doc_id:
+                page_count = count_pdf_pages(pdf_path)
+                return DocumentInfo(
+                    doc_id=doc_id,
+                    doc_name=doc_name,
+                    page_count=page_count,
+                    pdf_path=str(pdf_path),
+                )
+        except Exception as exc:
+            logger.opt(exception=exc).warning(f"Failed to check doc_id for {doc_name}")
+
+    raise FileNotFoundError(f"Document with id '{doc_id}' not found")

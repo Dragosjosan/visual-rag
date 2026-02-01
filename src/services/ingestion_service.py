@@ -1,4 +1,5 @@
 from pathlib import Path
+import asyncio
 
 from fastapi import UploadFile
 from loguru import logger
@@ -34,15 +35,17 @@ class IngestionService:
     def ingest_pdf_from_path(
         self,
         pdf_path: Path,
-        doc_id: str | None = None,
         dpi: int = 144,
         max_pages: int | None = None,
     ) -> tuple[str, int, int]:
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
-        if doc_id is None:
-            doc_id = generate_doc_id(pdf_path)
+        doc_id = generate_doc_id(pdf_path)
+
+        if self.milvus_service.document_exists(doc_id):
+            logger.info(f"Document already exists with doc_id={doc_id}, skipping ingestion")
+            return doc_id, 0, 0
 
         logger.info(f"Starting ingestion for doc_id={doc_id}, path={pdf_path}")
 
@@ -125,7 +128,6 @@ async def save_upload_to_temp(file: UploadFile, temp_dir: Path) -> Path:
 async def ingest_uploaded_pdf(
     file: UploadFile,
     temp_dir: Path,
-    doc_id: str | None = None,
     dpi: int = 144,
     max_pages: int | None = None,
 ) -> tuple[str, int, int]:
@@ -133,11 +135,11 @@ async def ingest_uploaded_pdf(
 
     try:
         service = IngestionService()
-        return service.ingest_pdf_from_path(
-            pdf_path=temp_path,
-            doc_id=doc_id,
-            dpi=dpi,
-            max_pages=max_pages,
+        return await asyncio.to_thread(
+            service.ingest_pdf_from_path,
+            temp_path,
+            dpi,
+            max_pages,
         )
     finally:
         if temp_path.exists():
