@@ -177,6 +177,7 @@ class MilvusService:
                 output_fields=["doc_id", "page_number"],
             )
 
+            token_page_max: dict[tuple[str, int], float] = {}
             for hits in results:
                 for hit in hits:
                     doc_id = hit["entity"].get("doc_id")
@@ -184,8 +185,11 @@ class MilvusService:
                     score = hit["distance"]
                     key = (doc_id, page_number)
 
-                    if score > page_scores.get(key, float("-inf")):
-                        page_scores[key] = score
+                    if score > token_page_max.get(key, float("-inf")):
+                        token_page_max[key] = score
+
+            for key, score in token_page_max.items():
+                page_scores[key] = page_scores.get(key, 0.0) + score
 
         aggregated = [
             {"doc_id": doc_id, "page_number": page_number, "score": score}
