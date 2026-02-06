@@ -15,6 +15,7 @@
 - Use error handling when generating code.
 - Use small functions for logic. Break big functions into smaller functions, to improve readability.
 - Use services and utils for all routers. No business logic in the router.
+- Define new tasks in the `backlog/` folder. Keep the correct Backlogmd format.
 
 ## Purpose
 - Use ColPali to create visual embeddings
